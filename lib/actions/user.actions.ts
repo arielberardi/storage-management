@@ -38,25 +38,27 @@ export const sendEmailOTP = async (email: string) => {
 
 export const createAccount = async ({ fullName, email }: { fullName: string; email: string }) => {
   const existingUser = await getUserByEmail(email);
+  if (existingUser) {
+    throw new Error("User Already Exists");
+  }
+
   const accountId = await sendEmailOTP(email);
   if (!accountId) {
     throw new Error("Failed to send an OTP");
   }
 
-  if (!existingUser) {
-    const { databases } = await createAdminClient();
-    await databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.usersCollectionId,
-      ID.unique(),
-      {
-        fullName,
-        email,
-        avatar: avatarPlaceholderUrl,
-        accountId,
-      }
-    );
-  }
+  const { databases } = await createAdminClient();
+  await databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.usersCollectionId,
+    ID.unique(),
+    {
+      fullName,
+      email,
+      avatar: avatarPlaceholderUrl,
+      accountId,
+    }
+  );
 
   return parseStringify({ accountId });
 };
@@ -110,5 +112,19 @@ export const signOutUser = async () => {
     handleError(error, "Failed to sign out user");
   } finally {
     redirect("/sign-in");
+  }
+};
+
+export const signInUser = async (email: string) => {
+  try {
+    const existingUser = await getUserByEmail(email);
+    if (existingUser) {
+      await sendEmailOTP(email);
+      return parseStringify({ accountId: existingUser.accountId });
+    }
+
+    return parseStringify({ accountId: null, error: "User not foun!" });
+  } catch (error) {
+    handleError(error, "Failed to sing in user");
   }
 };
