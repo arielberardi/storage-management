@@ -53,6 +53,7 @@ export const uploadFile = async ({ file, ownerId, accountId, path }: UploadFileP
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createQueries = (currentUser: any) => {
   const queries = [
     Query.or([

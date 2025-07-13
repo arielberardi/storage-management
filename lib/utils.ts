@@ -4,8 +4,7 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-export const parseStringify = (value: unknown) =>
-  JSON.parse(JSON.stringify(value));
+export const parseStringify = (value: unknown) => JSON.parse(JSON.stringify(value));
 
 export const convertFileToUrl = (file: File) => URL.createObjectURL(file);
 
@@ -66,8 +65,7 @@ export const getFileType = (fileName: string) => {
   const videoExtensions = ["mp4", "avi", "mov", "mkv", "webm"];
   const audioExtensions = ["mp3", "wav", "ogg", "flac"];
 
-  if (documentExtensions.includes(extension))
-    return { type: "document", extension };
+  if (documentExtensions.includes(extension)) return { type: "document", extension };
   if (imageExtensions.includes(extension)) return { type: "image", extension };
   if (videoExtensions.includes(extension)) return { type: "video", extension };
   if (audioExtensions.includes(extension)) return { type: "audio", extension };
@@ -110,10 +108,7 @@ export const formatDateTime = (isoString: string | null | undefined) => {
   return `${time}, ${day} ${month}`;
 };
 
-export const getFileIcon = (
-  extension: string | undefined,
-  type: FileType | string,
-) => {
+export const getFileIcon = (extension: string | undefined, type: FileType | string) => {
   switch (extension) {
     // Document
     case "pdf":
