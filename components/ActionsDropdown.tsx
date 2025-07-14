@@ -23,15 +23,16 @@ import { Models } from "node-appwrite";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { renameFiles } from "@/lib/actions/file.actions";
+import { renameFiles, updateFileUsers } from "@/lib/actions/file.actions";
 import { usePathname } from "next/navigation";
+import { FileDetails, ShareInput } from "@/components/ActionsModalContent";
 
 const ActionsDropdown = ({ file }: { file: Models.Document }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropwdownOpen, setIsDropdownOpen] = useState(false);
   const [action, setAction] = useState<ActionType | null>(null);
   const [name, setName] = useState(file.name);
-  const [emails, setEmails] = useState([]);
+  const [emails, setEmails] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const path = usePathname();
 
@@ -40,6 +41,7 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
     setIsDropdownOpen(false);
     setAction(null);
     setName(file.Name);
+    setEmails([]);
   };
 
   const handleAction = async () => {
@@ -49,7 +51,7 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
 
     const actions = {
       rename: () => renameFiles({ fileId: file.$id, name, extension: file.extension, path }),
-      share: () => {},
+      share: () => updateFileUsers({ fileId: file.$id, emails, path }),
       delete: () => {},
     };
 
@@ -59,18 +61,19 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
     setIsLoading(false);
   };
 
-  // const handleRemoveUser = async (email: string) => {
-  //   const updatedEmails = emails.filter((e) => e !== email);
+  const handleRemoveUser = async (email: string) => {
+    const updatedEmails = emails.filter((e) => e !== email);
 
-  //   const success = await updateFileUsers({
-  //     fileId: file.$id,
-  //     emails: updatedEmails,
-  //     path,
-  //   });
+    const success = await updateFileUsers({
+      fileId: file.$id,
+      emails: updatedEmails,
+      path,
+    });
 
-  //   if (success) setEmails(updatedEmails);
-  //   closeAllModals();
-  // };
+    if (success) setEmails(updatedEmails);
+
+    closeAllModals();
+  };
 
   const renderDialogContent = () => {
     if (!action) return null;
@@ -84,7 +87,7 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
           {value === "rename" && (
             <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
           )}
-          {/* {value === "details" && <FileDetails file={file} />}
+          {value === "details" && <FileDetails file={file} />}
           {value === "share" && (
             <ShareInput file={file} onInputChange={setEmails} onRemove={handleRemoveUser} />
           )}
@@ -93,7 +96,7 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
               Are you sure you want to delete{` `}
               <span className="delete-file-name">{file.name}</span>?
             </p>
-          )} */}
+          )}
         </DialogHeader>
         {["rename", "delete", "share"].includes(value) && (
           <DialogFooter className="flex flex-col gap-3 md:flex-row">
