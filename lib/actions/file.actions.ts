@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/appwrite";
 import { appwriteConfig } from "@/lib/appwrite/config";
-import { ID, Query } from "node-appwrite";
+import { ID, Models, Query } from "node-appwrite";
 import { InputFile } from "node-appwrite/file";
 import { constructFileUrl, getFileType, parseStringify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -54,7 +54,7 @@ export const uploadFile = async ({ file, ownerId, accountId, path }: UploadFileP
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const createQueries = (currentUser: any) => {
+const createQueries = (currentUser: Models.Document, types: FileType[]) => {
   const queries = [
     Query.or([
       Query.equal("owner", [currentUser.$id]),
@@ -62,10 +62,11 @@ const createQueries = (currentUser: any) => {
     ]),
   ];
 
+  if (types.length > 0) queries.push(Query.equal("type", types));
   return queries;
 };
 
-export const getFiles = async () => {
+export const getFiles = async ({ types = [] }: GetFilesProps) => {
   const { databases } = await createAdminClient();
 
   try {
@@ -74,7 +75,7 @@ export const getFiles = async () => {
       throw new Error("User not found");
     }
 
-    const queries = createQueries(currentUser);
+    const queries = createQueries(currentUser, types);
 
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
