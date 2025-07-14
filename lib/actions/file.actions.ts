@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/lib/appwrite";
+import { createAdminClient, createSessionClient } from "@/lib/appwrite";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { ID, Models, Query } from "node-appwrite";
 import { InputFile } from "node-appwrite/file";
@@ -147,6 +147,7 @@ export const updateFileUsers = async ({ fileId, emails, path }: UpdateFileUsersP
 
 export const deleteFile = async ({ fileId, bucketFileId, path }: DeleteFileProps) => {
   const { databases, storage } = await createAdminClient();
+
   try {
     const deleteFile = await databases.deleteDocument(
       appwriteConfig.databaseId,
@@ -162,5 +163,47 @@ export const deleteFile = async ({ fileId, bucketFileId, path }: DeleteFileProps
     return parseStringify({ status: "success" });
   } catch (error) {
     handleError(error, "Failed to update file");
+  }
+};
+
+export const getTotalSpaceUsed = async () => {
+  const { databases } = await createSessionClient();
+  const currentUser = await getCurrentUser();
+
+  try {
+    if (!currentUser) throw new Error("User is not authenticated.");
+
+    const files = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      [Query.equal("owner", [currentUser.$id])]
+    );
+
+    const totalSpace = {
+      image: { size: 0, lastestData: "" },
+      document: { size: 0, lastestData: "" },
+      video: { size: 0, lastestData: "" },
+      audio: { size: 0, lastestData: "" },
+      other: { size: 0, lastestData: "" },
+      used: 0,
+      all: 2 * 1024 * 1024 * 1024,
+    };
+
+    files.documents.forEach((file) => {
+      const fileType = file.type as FileType;
+      totalSpace[fileType].size += file.size;
+      totalSpace.used += file.size;
+
+      if (
+        !totalSpace[fileType].lastestData ||
+        new Date(file.$updatedAt) > new Date(totalSpace[fileType].lastestData)
+      ) {
+        totalSpace[fileType].lastestData = file.$updatedAt;
+      }
+    });
+
+    return parseStringify(totalSpace);
+  } catch (error) {
+    handleError(error, "Failed to calculate total space used.");
   }
 };
