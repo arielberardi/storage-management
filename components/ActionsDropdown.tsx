@@ -1,5 +1,3 @@
-// TODO: After Closing Dropdown, can't click on anything else
-// TODO: Sharing file just show latest email
 "use client";
 
 import {
