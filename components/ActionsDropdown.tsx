@@ -1,3 +1,5 @@
+// TODO: After Closing Dropdown, can't click on anything else
+// TODO: Sharing file just show latest email
 "use client";
 
 import {
@@ -23,7 +25,7 @@ import { Models } from "node-appwrite";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { renameFiles, updateFileUsers } from "@/lib/actions/file.actions";
+import { deleteFile, renameFiles, updateFileUsers } from "@/lib/actions/file.actions";
 import { usePathname } from "next/navigation";
 import { FileDetails, ShareInput } from "@/components/ActionsModalContent";
 
@@ -52,7 +54,7 @@ const ActionsDropdown = ({ file }: { file: Models.Document }) => {
     const actions = {
       rename: () => renameFiles({ fileId: file.$id, name, extension: file.extension, path }),
       share: () => updateFileUsers({ fileId: file.$id, emails, path }),
-      delete: () => {},
+      delete: () => deleteFile({ fileId: file.$id, bucketFileId: file.bucketFileId, path }),
     };
 
     const success = await actions[action.value as keyof typeof actions]();
